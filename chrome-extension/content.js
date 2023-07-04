@@ -13,6 +13,41 @@
 // These are the default settings. Since v1.3, a 'settings' menu allows to change most of the below values in the UI
 // Since v1.4, these settings are saved. So there is no need to edit them out anymore.
 
+/*
+const data = {
+  "source_url": "https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg",
+  "script": {
+    "type": "text",
+    "input": "Hello world!"
+  }
+};
+
+//keywords search in chrome extension search: mp3, audio, how to play audio in javascript?
+
+fetch('https://api.d-id.com/talks', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Basic YW5nZWxpbmF6aGVuZzA0QGdtYWlsLmNvbQ:36VA9L_1qK_gVBKJ7Qbv6',  // If needed
+  },
+  body: JSON.stringify(data)
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch((error) => console.log('Error:', error));
+
+fetch('https://api.d-id.com/talks/tlk_dnKmVC7KcR8daWtcso4Gm', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Basic YW5nZWxpbmF6aGVuZzA0QGdtYWlsLmNvbQ:36VA9L_1qK_gVBKJ7Qbv6',  // If needed
+  },
+})
+.then(response => response.json())  // Convert the response data to JSON
+.then(data => console.log(data))    // Log the response data
+.catch((error) => console.log('Error:', error));  // Log any errors
+
+*/
+
 // Settings for the text-to-speech functionality (the bot's voice)
 var CN_TEXT_TO_SPEECH_RATE = 1; // The higher the rate, the faster the bot will speak
 var CN_TEXT_TO_SPEECH_PITCH = 1; // This will alter the pitch for the bot's voice
@@ -91,6 +126,7 @@ var CN_CURRENT_AUDIO = null;
 
 // This function will say the given text out loud using the browser's speech synthesis API, or send the message to the ElevenLabs conversion stack
 function CN_SayOutLoud(text) {
+	console.log("text: ", text);
         // If TTS is disabled and there's nothing to say, ensure speech recognition is started
         if (!text || CN_SPEAKING_DISABLED) {
             if (CN_SPEECH_REC_SUPPORTED && CN_SPEECHREC && !CN_IS_LISTENING && !CN_PAUSED && !CN_SPEECHREC_DISABLED && !CN_IS_READING) {
@@ -119,13 +155,48 @@ function CN_SayOutLoud(text) {
         }
 
 	// What is the TTS method?
+	/*
 	if (CN_TTS_ELEVENLABS) {
 		// We are using ElevenLabs, so push message to queue
 		CN_SayOutLoudElevenLabs(text);
 		return;
-	}
+	}*/
 	
 	// Let's speak out loud with the browser's text-to-speech API
+	const data = {
+		"source_url": "https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg",
+		"script": {
+		  "type": "text",
+		  "input": text
+		}
+	  };
+
+	var id = "";
+	  	  
+	  fetch('https://api.d-id.com/talks', {
+		method: 'POST',
+		headers: {
+		  'Content-Type': 'application/json',
+		  'Authorization': 'Basic YW5nZWxpbmF6aGVuZzA0QGdtYWlsLmNvbQ:0qUXADMWagUGN8V6UO3XD',
+		},
+		body: JSON.stringify(data)
+	  })
+	  .then(response => response.json())
+	  .then(data => id = data.id)
+	  .catch((error) => console.log('Error:', error));
+
+	  console.log("id", id);
+	  
+	  fetch('https://api.d-id.com/talks/' + id, { 
+		method: 'GET',
+		headers: {
+		  'Authorization': 'Basic YW5nZWxpbmF6aGVuZzA0QGdtYWlsLmNvbQ:0qUXADMWagUGN8V6UO3XD', 
+		},
+	  })
+	  .then(response => response.json())  // Convert the response data to JSON
+	  .then(data => console.log(data))    // Log the response data
+	  .catch((error) => console.log('Error:', error));  // Log any errors
+	/*
 	console.log("[BROWSER] Saying out loud: " + text);
 	var msg = new SpeechSynthesisUtterance();
 	msg.text = text;
@@ -149,7 +220,8 @@ function CN_SayOutLoud(text) {
 		CN_AfterSpeakOutLoudFinished();
 	}
 	CN_IS_READING = true;
-	window.speechSynthesis.speak(msg);
+	window.speechSynthesis.speak(msg); */
+	
 }
 
 // Say a message out loud using ElevenLabs
@@ -434,7 +506,8 @@ function CN_KeepSpeechSynthesisActive() {
 function CN_SplitIntoSentences(text) {
 	var sentences = [];
 	var currentSentence = "";
-	
+	sentences[0] = text;
+	/*
 	for(var i=0; i<text.length; i++) {
 		//
 		var currentChar = text[i];
@@ -465,7 +538,7 @@ function CN_SplitIntoSentences(text) {
 			if (currentSentence.trim() != "") sentences.push(currentSentence.trim());
 			currentSentence = "";
 		}
-	}
+	} */
 	
 	return sentences;
 }
@@ -483,16 +556,11 @@ function CN_CheckNewMessages() {
 		CN_CURRENT_MESSAGE_SENTENCES_NEXT_READ = 0;
 	}
 	
-	// Split current message into parts
+	// Split current message into parts 
+	
 	if (CN_CURRENT_MESSAGE && CN_CURRENT_MESSAGE.length) {
 		var currentText = jQuery(".text-base:last").find(".items-start").text()+"";
-		//console.log("currentText:" + currentText);
-		
-		// Remove code blocks?
-		if (CN_IGNORE_CODE_BLOCKS) {
-			currentText = jQuery(".text-base:last").find(".items-start").find(".markdown").contents().not("pre").text();
-			//console.log("[CODE] currentText:" + currentText);
-		}
+		//console.log("full message", currentText); //correct, just printed a whole bunch of times
 		
 		var newSentences = CN_SplitIntoSentences(currentText);
 		if (newSentences != null && newSentences.length != CN_CURRENT_MESSAGE_SENTENCES.length) {
